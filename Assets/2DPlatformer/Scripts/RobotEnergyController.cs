@@ -18,7 +18,6 @@ public class RobotEnergyController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        print("energy: " + energy);
         energyText.text = "Energy: " + (int)energy; 
     }
 
@@ -31,7 +30,7 @@ public class RobotEnergyController : MonoBehaviour
     }
 
     public void Jetpack() {
-    	energy -= 0.01f;
+    	energy -= 0.1f;
     }
 
 }

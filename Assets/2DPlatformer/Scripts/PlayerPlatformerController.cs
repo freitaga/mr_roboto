@@ -8,6 +8,10 @@ public class PlayerPlatformerController : PhysicsObject {
     public float jumpTakeOffSpeed = 7;
     private bool doubleJumpUsed = false;
     private bool onWall = false;
+    private float wallJumpActiveFrame = 0;
+    private bool isWallJump = false;
+    private float dashActiveFrame = 0;
+    private bool isDash = false;
 
     private SpriteRenderer spriteRenderer;
     private Animator animator;
@@ -33,31 +37,29 @@ public class PlayerPlatformerController : PhysicsObject {
         if (Input.GetButtonDown ("Jump") && grounded) {
             velocity.y = jumpTakeOffSpeed;
         }
-        else if (Input.GetButtonUp ("Jump") && onWall) //wall jump
+        else if (Input.GetButtonDown ("Jump") && onWall) //wall jump
         {
             velocity.y = jumpTakeOffSpeed;
-            velocity.x = jumpTakeOffSpeed;
+            onWall = false;
+            //velocity.x = jumpTakeOffSpeed;
+            isWallJump = true;
             print("wall jump");
+            spriteRenderer.flipX = !spriteRenderer.flipX;
             //robotEnergy.WallJump();
         }
       	else if (Input.GetButtonDown ("Jump") && !doubleJumpUsed) { //double jump
             velocity.y = jumpTakeOffSpeed;
             doubleJumpUsed = true;
+            robotEnergy.DoubleJump();
         }
         else if (Input.GetButtonUp ("Jump")) 
         {
             if (velocity.y > 0) {
                 velocity.y = velocity.y * 0.5f;
             }
-
-            robotEnergy.DoubleJump();
         }
-        else if (Input.GetButtonDown (KeyCode.J.ToString()) && !grounded) { //dash
-        	if(move.x > 0) {
-        		move.x = 15;
-        	} else {
-        		move.x = -15;
-        	}
+        else if (Input.GetButtonDown (KeyCode.J.ToString())) { //dash
+        	isDash = true;
 
         	robotEnergy.Dash();
         }
@@ -81,8 +83,47 @@ public class PlayerPlatformerController : PhysicsObject {
 
         animator.SetBool ("grounded", grounded);
         animator.SetFloat ("velocityX", Mathf.Abs (velocity.x) / maxSpeed);
+        
+        if(onWall) {
+        	velocity.y = 0;
+        }
 
-        targetVelocity = move * maxSpeed;
+        if(isWallJump) {
+        	print(wallJumpActiveFrame);
+
+        	if(wallJumpActiveFrame < 8) {
+        		wallJumpActiveFrame += 1;
+        		move.x = -1;
+        	} else if (wallJumpActiveFrame < 16) {
+        		wallJumpActiveFrame += 1;
+        		move.x = -0.5f;
+        	}else {
+        		isWallJump = false;
+        		wallJumpActiveFrame = 0;
+        	}
+        }
+
+        if(isDash) {
+        	if(dashActiveFrame < 20) {
+        		print("velocity x: ");
+        		print(velocity.x);
+        		if(!grounded) {
+        			velocity.y = 0.5f;
+        		}
+        		if(!spriteRenderer.flipX) {
+        			move.x = 1.75f;
+        		} else if(spriteRenderer.flipX) {
+        			move.x = -1.75f;
+        		}
+        		dashActiveFrame++;
+        	} else {
+        		isDash = false;
+        		dashActiveFrame = 0;
+        	}
+        }
+ 
+    	targetVelocity = move * maxSpeed;
+    
     }
 
     void OnCollisionEnter2D(Collision2D other){
